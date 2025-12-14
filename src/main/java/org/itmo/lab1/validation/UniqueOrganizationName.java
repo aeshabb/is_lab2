@@ -16,8 +16,5 @@ public @interface UniqueOrganizationName {
     
     Class<? extends Payload>[] payload() default {};
     
-    /**
-     * Игнорировать ID при проверке (для операций UPDATE)
-     */
     boolean ignoreId() default false;
 }

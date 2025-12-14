@@ -67,6 +67,7 @@ public class ImportService {
             // Проверка уникальности внутри импортируемого файла
             Set<String> namesInImport = new HashSet<>();
             Set<String> zipCodesInImport = new HashSet<>();
+            Set<Double> ratingsInImport = new HashSet<>();
             
             for (int i = 0; i < dtos.size(); i++) {
                 OrganizationImportDto dto = dtos.get(i);
@@ -78,7 +79,12 @@ public class ImportService {
                 }
                 namesInImport.add(dto.getName());
 
-                // Проверка уникальности zipCode внутри файла
+                // Копим рейтинги для последующей проверки против БД
+                if (dto.getRating() != null) {
+                    ratingsInImport.add(dto.getRating());
+                }
+
+                // Проверка уникальности zipCode внутри файла (только внутри файла, не в БД)
                 if (dto.getPostalAddress() != null) {
                     String zipCode = dto.getPostalAddress().getZipCode();
                     if (zipCodesInImport.contains(zipCode)) {
@@ -95,6 +101,20 @@ public class ImportService {
                             ": дублирующийся zipCode '" + zipCode + "' в файле импорта");
                     }
                     zipCodesInImport.add(zipCode);
+                }
+            }
+
+            // Проверка уникальности по БД: имя и рейтинг не должны уже существовать
+            for (String name : namesInImport) {
+                if (organizationRepository.existsByName(name)) {
+                    throw new IllegalArgumentException(
+                        "Организация с именем '" + name + "' уже существует в системе");
+                }
+            }
+            for (Double rating : ratingsInImport) {
+                if (!organizationRepository.findByRating(rating).isEmpty()) {
+                    throw new IllegalArgumentException(
+                        "Организация с рейтингом '" + rating + "' уже существует в системе");
                 }
             }
 

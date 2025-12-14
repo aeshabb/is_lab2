@@ -46,6 +46,7 @@ public class Organization {
 
     @NotNull(message = "Рейтинг не может быть null")
     @Positive(message = "Значение поля должно быть больше 0")
+    @org.itmo.lab1.validation.UniqueRating
     @Column(name = "rating", nullable = false)
     private Double rating;
 

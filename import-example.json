@@ -46,7 +46,7 @@
     "annualTurnover": 500000,
     "employeesCount": 5,
     "rating": 3.9,
-    "type": "PRIVATE_LIMITED_COMPANY",
+    "type": "COMMERCIAL",
     "postalAddress": {
       "street": "ул. Строителей д.7",
       "zipCode": "3334445"

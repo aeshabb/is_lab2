@@ -1,5 +1,7 @@
 package org.itmo.lab1.service;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import org.itmo.lab1.model.Address;
 import org.itmo.lab1.model.Coordinates;
 import org.itmo.lab1.model.Organization;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional
@@ -26,16 +29,19 @@ public class OrganizationService {
     private final AddressRepositoryJpa addressRepository;
     private final CoordinatesRepositoryJpa coordinatesRepository;
     private final WebSocketNotificationService notificationService;
+    private final Validator validator;
 
     @Autowired
     public OrganizationService(OrganizationRepositoryJpa organizationRepository,
                                AddressRepositoryJpa addressRepository,
                                CoordinatesRepositoryJpa coordinatesRepository,
-                               WebSocketNotificationService notificationService) {
+                               WebSocketNotificationService notificationService,
+                               Validator validator) {
         this.organizationRepository = organizationRepository;
         this.addressRepository = addressRepository;
         this.coordinatesRepository = coordinatesRepository;
         this.notificationService = notificationService;
+        this.validator = validator;
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ)
@@ -43,6 +49,11 @@ public class OrganizationService {
         if (organization.getCreationDate() == null) {
             organization.setCreationDate(java.time.LocalDate.now());
         }
+        
+        // Bean Validation (структурные ограничения)
+        validateOrganization(organization);
+        // Бизнес-проверки уникальности
+        ensureUniqueNameAndRatingForCreate(organization);
         
         if (organization.getCoordinates() != null) {
             handleCoordinates(organization);
@@ -80,6 +91,33 @@ public class OrganizationService {
         }
     }
 
+    private void ensureUniqueNameAndRatingForCreate(Organization organization) {
+        // имя
+        if (organizationRepository.existsByName(organization.getName())) {
+            throw new IllegalArgumentException("Организация с таким именем уже существует");
+        }
+        // рейтинг
+        if (!organizationRepository.findByRating(organization.getRating()).isEmpty()) {
+            throw new IllegalArgumentException("Организация с таким рейтингом уже существует");
+        }
+    }
+
+    private void validateOrganization(Organization organization) {
+        Set<ConstraintViolation<Organization>> violations = validator.validate(organization);
+        if (!violations.isEmpty()) {
+            StringBuilder sb = new StringBuilder("Ошибки валидации: ");
+            boolean first = true;
+            for (ConstraintViolation<Organization> violation : violations) {
+                if (!first) {
+                    sb.append("; ");
+                }
+                sb.append(violation.getMessage());
+                first = false;
+            }
+            throw new IllegalArgumentException(sb.toString());
+        }
+    }
+
     @Transactional(readOnly = true)
     public Optional<Organization> getOrganizationById(Long id) {
         return organizationRepository.findById(id);
@@ -109,6 +147,11 @@ public class OrganizationService {
             if (organization.getCreationDate() == null) {
                 organization.setCreationDate(java.time.LocalDate.now());
             }
+
+            // Структурная валидация
+            validateOrganization(organization);
+            // Уникальность с учётом текущей сущности: допускаем то же имя/рейтинг
+            ensureUniqueNameAndRatingForUpdate(organization);
             
             if (organization.getCoordinates() != null) {
                 handleCoordinates(organization);
@@ -142,6 +185,20 @@ public class OrganizationService {
             return reloaded;
         } catch (DataIntegrityViolationException ex) {
             throw new IllegalArgumentException("Неверное значение координат: " + ex.getMostSpecificCause().getMessage(), ex);
+        }
+    }
+
+    private void ensureUniqueNameAndRatingForUpdate(Organization organization) {
+        // имя: существует кто-то другой с таким же именем?
+        if (organizationRepository.existsByNameAndIdNot(organization.getName(), organization.getId())) {
+            throw new IllegalArgumentException("Организация с таким именем уже существует");
+        }
+        // рейтинг: находим всех с таким рейтингом и проверяем, что нет других сущностей
+        java.util.List<Organization> sameRating = organizationRepository.findByRating(organization.getRating());
+        for (Organization other : sameRating) {
+            if (!other.getId().equals(organization.getId())) {
+                throw new IllegalArgumentException("Организация с таким рейтингом уже существует");
+            }
         }
     }
 

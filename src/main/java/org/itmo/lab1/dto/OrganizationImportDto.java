@@ -26,6 +26,7 @@ public class OrganizationImportDto {
 
     @NotNull(message = "Рейтинг не может быть null")
     @Positive(message = "Значение поля должно быть больше 0")
+    @org.itmo.lab1.validation.UniqueRating
     private Double rating;
 
     @NotNull(message = "Тип организации не может быть null")
@@ -133,7 +134,6 @@ public class OrganizationImportDto {
 
         @NotNull(message = "Почтовый индекс не может быть null")
         @Size(min = 7, message = "Длина строки должна быть не меньше 7")
-        @org.itmo.lab1.validation.UniqueZipCode
         @JsonProperty("zipCode")
         private String zipCode;
 

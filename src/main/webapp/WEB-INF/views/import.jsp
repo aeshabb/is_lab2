@@ -183,7 +183,7 @@
                             <tr>
                                 <td>${history.id}</td>
                                 <td>
-                                    <fmt:formatDate value="${history.timestamp}" pattern="dd.MM.yyyy HH:mm:ss" type="both"/>
+                                    ${history.timestamp}
                                 </td>
                                 <td>${history.username}</td>
                                 <td class="${history.status == 'SUCCESS' ? 'status-success' : 'status-failed'}">

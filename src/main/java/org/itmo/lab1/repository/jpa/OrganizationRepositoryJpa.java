@@ -89,8 +89,17 @@ public class OrganizationRepositoryJpa {
             "SELECT o FROM Organization o WHERE o.rating = :rating", 
             Organization.class
         );
-        query.setParameter("rating", rating.intValue());
+        query.setParameter("rating", rating);
         return query.getResultList();
+    }
+
+    public long countByRating(Double rating) {
+        TypedQuery<Long> query = entityManager.createQuery(
+            "SELECT COUNT(o) FROM Organization o WHERE o.rating = :rating",
+            Long.class
+        );
+        query.setParameter("rating", rating);
+        return query.getSingleResult();
     }
 
     public Page<Organization> findByEmployeesCountLessThan(Long maxEmployees, PageRequest pageRequest) {

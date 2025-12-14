@@ -4,6 +4,6 @@
            xsi:schemaLocation="http://www.jboss.com/xml/ns/javaee
            http://www.jboss.org/schema/jbossas/jboss-web_14_0.xsd"
            version="14.0">
-    <context-root>/lab1</context-root>
+    <context-root>/lab2</context-root>
 </jboss-web>
 
