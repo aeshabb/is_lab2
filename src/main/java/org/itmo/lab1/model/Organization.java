@@ -17,6 +17,7 @@ public class Organization {
 
     @NotNull(message = "Название не может быть null")
     @NotBlank(message = "Строка не может быть пустой")
+    @org.itmo.lab1.validation.UniqueOrganizationName
     @Column(name = "name", nullable = false)
     private String name;
 

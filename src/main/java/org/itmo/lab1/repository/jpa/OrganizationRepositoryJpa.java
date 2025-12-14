@@ -176,6 +176,25 @@ public class OrganizationRepositoryJpa {
         entityManager.createQuery("DELETE FROM Organization o").executeUpdate();
     }
 
+    public boolean existsByName(String name) {
+        TypedQuery<Long> query = entityManager.createQuery(
+            "SELECT COUNT(o) FROM Organization o WHERE o.name = :name", 
+            Long.class
+        );
+        query.setParameter("name", name);
+        return query.getSingleResult() > 0;
+    }
+
+    public boolean existsByNameAndIdNot(String name, Long id) {
+        TypedQuery<Long> query = entityManager.createQuery(
+            "SELECT COUNT(o) FROM Organization o WHERE o.name = :name AND o.id != :id", 
+            Long.class
+        );
+        query.setParameter("name", name);
+        query.setParameter("id", id);
+        return query.getSingleResult() > 0;
+    }
+
     private String buildOrderBy(Sort sort) {
         if (sort.isSorted()) {
             StringBuilder sb = new StringBuilder();

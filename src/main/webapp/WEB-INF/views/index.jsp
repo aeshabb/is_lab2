@@ -18,6 +18,7 @@
         <nav>
             <a href="${pageContext.request.contextPath}/">Главная</a>
             <a href="${pageContext.request.contextPath}/special">Специальные операции</a>
+            <a href="${pageContext.request.contextPath}/import">Импорт организаций</a>
         </nav>
 
         <c:if test="${not empty message}">

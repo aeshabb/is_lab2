@@ -84,4 +84,23 @@ public class AddressRepositoryJpa {
     public void deleteAll() {
         entityManager.createQuery("DELETE FROM Address a").executeUpdate();
     }
+
+    public boolean existsByZipCode(String zipCode) {
+        TypedQuery<Long> query = entityManager.createQuery(
+            "SELECT COUNT(a) FROM Address a WHERE a.zipCode = :zipCode", 
+            Long.class
+        );
+        query.setParameter("zipCode", zipCode);
+        return query.getSingleResult() > 0;
+    }
+
+    public boolean existsByZipCodeAndIdNot(String zipCode, Long id) {
+        TypedQuery<Long> query = entityManager.createQuery(
+            "SELECT COUNT(a) FROM Address a WHERE a.zipCode = :zipCode AND a.id != :id", 
+            Long.class
+        );
+        query.setParameter("zipCode", zipCode);
+        query.setParameter("id", id);
+        return query.getSingleResult() > 0;
+    }
 }

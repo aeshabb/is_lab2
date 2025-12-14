@@ -18,6 +18,7 @@ public class Address {
 
     @NotNull(message = "Почтовый индекс не может быть null")
     @Size(min = 7, message = "Длина строки должна быть не меньше 7")
+    @org.itmo.lab1.validation.UniqueZipCode
     @Column(name = "zip_code", nullable = false, length = 50)
     private String zipCode;
 

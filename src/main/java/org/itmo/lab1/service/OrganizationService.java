@@ -11,6 +11,7 @@ import org.itmo.lab1.util.PageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -37,6 +38,7 @@ public class OrganizationService {
         this.notificationService = notificationService;
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Organization createOrganization(Organization organization) {
         if (organization.getCreationDate() == null) {
             organization.setCreationDate(java.time.LocalDate.now());
@@ -97,12 +99,42 @@ public class OrganizationService {
         return organizations;
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public Organization updateOrganization(Organization organization) {
         if (!organizationRepository.existsById(organization.getId())) {
             throw new IllegalArgumentException("Organization not found");
         }
+        
         try {
-            Organization updated = createOrganization(organization);
+            if (organization.getCreationDate() == null) {
+                organization.setCreationDate(java.time.LocalDate.now());
+            }
+            
+            if (organization.getCoordinates() != null) {
+                handleCoordinates(organization);
+            }
+
+            if (organization.getPostalAddress() != null && organization.getPostalAddress().getId() == null) {
+                Address existing = addressRepository
+                        .findByStreetAndZipCode(organization.getPostalAddress().getStreet(),
+                                organization.getPostalAddress().getZipCode())
+                        .orElse(null);
+                if (existing != null) {
+                    organization.setPostalAddress(existing);
+                }
+            }
+
+            if (organization.getOfficialAddress() != null && organization.getOfficialAddress().getId() == null) {
+                Address existing = addressRepository
+                        .findByStreetAndZipCode(organization.getOfficialAddress().getStreet(),
+                                organization.getOfficialAddress().getZipCode())
+                        .orElse(null);
+                if (existing != null) {
+                    organization.setOfficialAddress(existing);
+                }
+            }
+
+            Organization updated = organizationRepository.save(organization);
             organizationRepository.flush();
             Organization reloaded = organizationRepository.findById(updated.getId())
                     .orElse(updated);
@@ -113,6 +145,7 @@ public class OrganizationService {
         }
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public boolean deleteOrganization(Long id) {
         if (!organizationRepository.existsById(id)) {
             return false;
